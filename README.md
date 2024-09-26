@@ -1,5 +1,32 @@
 # Постепенное уменьшение яркости на светильнике
 Для создания автоматизации в Home Assistant, которая будет постепенно снижать яркость включенного светильника в течение 30 минут начиная за 10 минут до заката, можно использовать встроенные триггеры и действия Home Assistant. Мы создадим автоматизацию с циклическим уменьшением яркости каждые 5 минут до минимального уровня, после чего светильник будет выключен.
+```yaml
+alias: Gradual Light Dim Before Sunset
+description: "Dim the light gradually starting 10 minutes before sunset"
+trigger:
+  - platform: sun
+    event: sunset
+    offset: "-00:10:00"  # Начать за 10 минут до заката
+condition:
+  - condition: state
+    entity_id: light.your_light_entity
+    state: 'on'  # Убедимся, что свет включен
+action:
+  - repeat:
+      count: 6  # Повторить 6 раз (каждые 5 минут в течение 30 минут)
+      sequence:
+        - service: light.turn_on
+          target:
+            entity_id: light.your_light_entity
+          data:
+            brightness_step: -42  # Уменьшить яркость на 42 (примерно 255/6 для постепенного уменьшения)
+        - delay: "00:05:00"  # Задержка на 5 минут между снижениями яркости
+  - service: light.turn_off  # Выключить свет, когда цикл завершится
+    target:
+      entity_id: light.your_light_entity
+mode: single
+
+```
 
 # Что делает эта автоматизация:
 1) Триггер: Автоматизация срабатывает за 10 минут до заката солнца.
